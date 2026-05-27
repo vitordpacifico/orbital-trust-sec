@@ -1,0 +1,31 @@
+﻿╔══════════════════════════════════════════════════════╗
+║     ORBITAL TRUST — CryptoService  |  GS 2026       ║
+║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR        ║
+╚══════════════════════════════════════════════════════╝
+
+[ CENÁRIO 1 ]  Campo: SensorTerrestre.Coordenada
+──────────────────────────────────────────────────────
+  Original    : -23.5505, -46.6333
+  Criptografado (Base64):
+  oZ9MzMSWNR58iMnRIWNZHtCcadH+MsrOBAV7T6E1Oki5HK/jFJnZy1Oyxm3G3g==
+  Descriptografado: -23.5505, -46.6333
+  Integridade OK  : True
+
+[ CENÁRIO 2 ]  Campo: SensorTerrestre.Coordenada (segundo sensor)
+──────────────────────────────────────────────────────
+  Original    : -15.7801, -47.9292
+  Criptografado (Base64):
+  evupfMog8OxGhiNuOqtOyfXV2aDUJtWJjz6bsZVrzeJd/MOQ389QKNIbAfm9mQ==
+  Descriptografado: -15.7801, -47.9292
+  Integridade OK  : True
+
+[ CENÁRIO 3 ]  Tamper detection — autenticação GCM
+──────────────────────────────────────────────────────
+  Adulteração detectada: CryptographicException lançada.
+  Modo GCM rejeita dados com tag inválida — proteção contra Tampering.
+
+══════════════════════════════════════════════════════
+  AES-256-GCM integrado ao Orbital Trust com sucesso.
+  Controle aplicado: Banco de Dados — campo Coordenada.
+  Mitiga: Information Disclosure + Tampering no banco.
+══════════════════════════════════════════════════════
