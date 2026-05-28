@@ -78,8 +78,5 @@ Ver pasta `/evidencias`:
 
 | Nome | RM |
 |---|---|
-| Vitor [Sobrenome] | [RM] |
-| [Integrante 2] | [RM] |
-| [Integrante 3] | [RM] |
-| [Integrante 4] | [RM] |
-| [Integrante 5] | [RM] |
+| Victor Dias | RM558017 |
+| Gustavo Paulino | RM554779 |
