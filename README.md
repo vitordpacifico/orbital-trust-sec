@@ -5,7 +5,7 @@
 ### Módulo de Cibersegurança · Orbital Trust
 **Global Solution · 1º Semestre 2026**
 
-[![.NET](https://img.shields.io/badge/.NET-8.0%2B-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-AEAD-success?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
 [![FIAP](https://img.shields.io/badge/FIAP-3ESR-ED1C24?style=for-the-badge)](https://www.fiap.com.br/)
 [![Disciplina](https://img.shields.io/badge/Cibersegurança_1-Oerton_Fernandes-0A66C2?style=for-the-badge)]()
@@ -194,12 +194,16 @@ catch (CryptographicException)
 orbital-trust-sec/
 ├── src/
 │   └── CryptoService/
-│       ├── CryptoService.cs       ← Encrypt / Decrypt (AES-256-GCM)
-│       ├── Program.cs             ← 3 cenários demonstrativos
+│       ├── CryptoService.cs            ← Encrypt / Decrypt (AES-256-GCM)
+│       ├── Program.cs                  ← 3 cenários demonstrativos
 │       └── CryptoService.csproj
+├── tests/
+│   └── CryptoService.Tests/
+│       ├── CryptoServiceTests.cs       ← suíte xUnit (roundtrip, tampering, nonce)
+│       └── CryptoService.Tests.csproj
 ├── evidencias/
-│   ├── output.txt                 ← saída completa da execução
-│   └── print_execucao.png         ← screenshot do terminal
+│   ├── output.txt                      ← saída completa da execução
+│   └── print_execucao.png              ← screenshot do terminal
 ├── .gitignore
 └── README.md
 ```
@@ -208,11 +212,34 @@ orbital-trust-sec/
 
 ## Como rodar
 
-> **Requisito:** .NET 8 ou superior
+> **Requisito:** .NET 10 SDK
 
 ```bash
 cd src/CryptoService
 dotnet run
+```
+
+### Chave de criptografia
+
+A chave é lida da variável de ambiente `ORBITAL_TRUST_KEY` (Base64 de 32 bytes).
+Se não definida, usa uma chave de demonstração — **adequado apenas para esta
+entrega**, jamais para produção.
+
+```bash
+# PowerShell
+$env:ORBITAL_TRUST_KEY = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+dotnet run
+
+# bash
+export ORBITAL_TRUST_KEY=$(openssl rand -base64 32)
+dotnet run
+```
+
+### Rodando os testes
+
+```bash
+cd tests/CryptoService.Tests
+dotnet test
 ```
 
 ### Output esperado
@@ -227,6 +254,12 @@ dotnet run
   Original              : -23.5505, -46.6333
   Criptografado (Base64): <valor único a cada execução>
   Descriptografado      : -23.5505, -46.6333
+  Integridade OK        : True
+
+[ CENÁRIO 2 ]  Campo: SensorTerrestre.Coordenada (segundo sensor)
+  Original              : -15.7801, -47.9292
+  Criptografado (Base64): <valor único a cada execução>
+  Descriptografado      : -15.7801, -47.9292
   Integridade OK        : True
 
 [ CENÁRIO 3 ]  Tamper detection
@@ -288,8 +321,9 @@ Ver pasta [`/evidencias`](./evidencias):
 
 | Biblioteca                      | Origem            | Observação                          |
 |---------------------------------|-------------------|-------------------------------------|
-| `System.Security.Cryptography`  | built-in .NET 8   | Sem dependências externas           |
-| `System.Text`                   | built-in .NET 8   | Encoding UTF-8                      |
+| `System.Security.Cryptography`  | built-in .NET 10  | Sem dependências externas           |
+| `System.Text`                   | built-in .NET 10  | Encoding UTF-8                      |
+| `xUnit 2.9`                     | testes            | Apenas em `CryptoService.Tests`     |
 
 **Zero dependências externas** — apenas a BCL do .NET.
 
