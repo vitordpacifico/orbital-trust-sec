@@ -1,13 +1,13 @@
-﻿╔══════════════════════════════════════════════════════╗
-║     ORBITAL TRUST — CryptoService  |  GS 2026       ║
-║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR        ║
+╔══════════════════════════════════════════════════════╗
+║     ORBITAL TRUST — CryptoService  |  GS 2026        ║
+║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR         ║
 ╚══════════════════════════════════════════════════════╝
 
 [ CENÁRIO 1 ]  Campo: SensorTerrestre.Coordenada
 ──────────────────────────────────────────────────────
   Original    : -23.5505, -46.6333
   Criptografado (Base64):
-  oZ9MzMSWNR58iMnRIWNZHtCcadH+MsrOBAV7T6E1Oki5HK/jFJnZy1Oyxm3G3g==
+  2ZOMhhnn2G82anqiSKGv25T+pAM1w00hQXovvKp72XhHlUB4UUpbevQkqJgh+Q==
   Descriptografado: -23.5505, -46.6333
   Integridade OK  : True
 
@@ -15,7 +15,7 @@
 ──────────────────────────────────────────────────────
   Original    : -15.7801, -47.9292
   Criptografado (Base64):
-  evupfMog8OxGhiNuOqtOyfXV2aDUJtWJjz6bsZVrzeJd/MOQ389QKNIbAfm9mQ==
+  10Yu3ROxNxyJYZ+lH+Cg5teTQSYc2uVKh2iwCE/as9MWtrTRrdCstgGrXzRvsA==
   Descriptografado: -15.7801, -47.9292
   Integridade OK  : True
 
