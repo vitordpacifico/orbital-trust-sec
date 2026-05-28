@@ -3,8 +3,8 @@ using OrbitalTrust.Security;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-Console.WriteLine("║     ORBITAL TRUST — CryptoService  |  GS 2026       ║");
-Console.WriteLine("║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR        ║");
+Console.WriteLine("║     ORBITAL TRUST — CryptoService  |  GS 2026        ║");
+Console.WriteLine("║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR         ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════╝");
 Console.WriteLine();
 
