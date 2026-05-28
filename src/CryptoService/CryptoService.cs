@@ -11,10 +11,12 @@ namespace OrbitalTrust.Security;
 /// </summary>
 public static class CryptoService
 {
-    // Em produção: carregar de variável de ambiente ou Azure Key Vault
-    // Aqui geramos uma chave estática de demonstração para evidência de execução
+    // Chave carregada da variável de ambiente ORBITAL_TRUST_KEY (Base64 de 32 bytes).
+    // Fallback para chave de demonstração apenas se a env var não estiver definida —
+    // em produção, o fallback deve ser removido e a chave gerenciada via Key Vault.
+    private const string _demoKey = "K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=";
     private static readonly byte[] _key = Convert.FromBase64String(
-        "K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols="); // 256-bit demo key
+        Environment.GetEnvironmentVariable("ORBITAL_TRUST_KEY") ?? _demoKey);
 
     /// <summary>
     /// Criptografa um dado sensível com AES-256-GCM.

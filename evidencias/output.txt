@@ -7,7 +7,7 @@
 ──────────────────────────────────────────────────────
   Original    : -23.5505, -46.6333
   Criptografado (Base64):
-  2ZOMhhnn2G82anqiSKGv25T+pAM1w00hQXovvKp72XhHlUB4UUpbevQkqJgh+Q==
+  vCGhi9Vx4BXOaudR5yS+luvFAuB3YOqvt8rrTqjfeHUwAfOCUrxgjQAfo07l9Q==
   Descriptografado: -23.5505, -46.6333
   Integridade OK  : True
 
@@ -15,7 +15,7 @@
 ──────────────────────────────────────────────────────
   Original    : -15.7801, -47.9292
   Criptografado (Base64):
-  10Yu3ROxNxyJYZ+lH+Cg5teTQSYc2uVKh2iwCE/as9MWtrTRrdCstgGrXzRvsA==
+  /374eKR444fzHDk3HCmARQho+Lamnu4CR24LQv6nD3u8YFBzfFxpDeclqwV3fA==
   Descriptografado: -15.7801, -47.9292
   Integridade OK  : True
 
