@@ -12,3 +12,6 @@
 # OS
 Thumbs.db
 .DS_Store
+
+# Fonte HTML do documento (so o PDF vai versionado)
+documento/*.html
