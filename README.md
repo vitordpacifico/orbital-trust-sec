@@ -21,7 +21,7 @@
 
 - **Criptografia AEAD** com AES-256-GCM na **coordenada do sensor** (dado sensível de localização)
 - **Mitigação dupla** — Information Disclosure (confidencialidade) + Tampering (autenticação)
-- **Zero dependências externas** — apenas a BCL do .NET (`System.Security.Cryptography`)
+- **Banco real em Docker** — PostgreSQL persiste a coordenada **sempre cifrada** (data at rest)
 - **Três cenários** demonstram roundtrip, unicidade de ciphertext e detecção de adulteração
 - **Justificativa técnica** documentada — por que GCM e não CBC
 
@@ -57,6 +57,12 @@ A arquitetura é desacoplada em três camadas: **IoT/CV** (Python + OpenCV) carr
 frames e gera um payload JSON padronizado; **API/ML** (FastAPI) refina o risco
 ambiental e emite recomendações; e o **App Mobile** (React Native/Expo) exibe os
 alertas. A confiança da análise sustenta o índice de confiabilidade do alerta.
+
+Para o histórico de leituras e alertas, a solução prevê uma camada de
+**persistência (PostgreSQL)**. É exatamente nesse ponto que entra este módulo: o
+campo `coordenada` — a localização exata do sensor — é o dado mais sensível do
+payload e **nunca** é gravado em texto claro. Este repositório sobe esse banco em
+Docker e demonstra a coordenada cifrada **em repouso** (*data at rest*).
 
 ---
 
@@ -198,17 +204,25 @@ catch (CryptographicException)
 ```
 orbital-trust-sec/
 ├── src/
-│   └── CryptoService/
-│       ├── CryptoService.cs            ← Encrypt / Decrypt (AES-256-GCM)
-│       ├── Program.cs                  ← 3 cenários demonstrativos
-│       └── CryptoService.csproj
+│   ├── CryptoService/
+│   │   ├── CryptoService.cs            ← Encrypt / Decrypt (AES-256-GCM)
+│   │   ├── Program.cs                  ← 3 cenários demonstrativos
+│   │   └── CryptoService.csproj
+│   └── DbSeed/
+│       ├── Program.cs                  ← grava coordenada cifrada no Postgres (Npgsql)
+│       └── DbSeed.csproj               ← reusa o mesmo CryptoService
+├── db/
+│   └── init.sql                        ← esquema: tabela leituras_sensor
 ├── tests/
 │   └── CryptoService.Tests/
 │       ├── CryptoServiceTests.cs       ← suíte xUnit (roundtrip, tampering, nonce)
 │       └── CryptoService.Tests.csproj
 ├── evidencias/
-│   ├── output.txt                      ← saída completa da execução
-│   └── print_execucao.png              ← screenshot do terminal
+│   ├── output.txt                      ← saída do CryptoService (3 cenários)
+│   ├── output-banco.txt                ← saída da gravação no banco + SELECT cru
+│   ├── print_execucao.png              ← screenshot do terminal (CryptoService)
+│   └── print_banco.png                 ← screenshot do banco cifrado (data at rest)
+├── docker-compose.yml                  ← PostgreSQL 16
 ├── .gitignore
 └── README.md
 ```
@@ -281,6 +295,38 @@ dotnet test
 
 ---
 
+## Banco de dados — coordenada cifrada em repouso (Docker)
+
+Além do CryptoService standalone, o repositório demonstra o controle integrado a
+um **banco real**: um PostgreSQL em Docker que persiste a coordenada **sempre
+cifrada**. O app `DbSeed` reutiliza o mesmo `CryptoService`, grava as leituras e
+relê do banco — provando que quem inspeciona a tabela vê apenas Base64.
+
+```bash
+# 1. Sobe o PostgreSQL (cria a tabela via db/init.sql)
+docker compose up -d
+
+# 2. Grava 2 leituras com a coordenada cifrada e relê do banco
+dotnet run --project src/DbSeed
+
+# 3. Prova de ouro: SELECT cru no banco — só se vê Base64, mesmo com acesso total
+docker exec orbital-trust-db psql -U orbital -d orbital_trust \
+  -c "SELECT id, sensor_nome, left(coordenada,44) AS no_banco FROM leituras_sensor;"
+
+# Encerra e remove o volume
+docker compose down -v
+```
+
+> **Por que isso importa:** o cenário do banco deixa de ser hipótese. Mesmo que um
+> atacante comprometa o PostgreSQL e faça `SELECT *`, a coordenada exata de cada
+> sensor permanece protegida — só a aplicação, de posse da chave, recupera o texto
+> claro. É a mitigação de **Information Disclosure** em *data at rest*, tangível.
+
+Evidência da execução em [`evidencias/output-banco.txt`](./evidencias/output-banco.txt)
+e [`evidencias/print_banco.png`](./evidencias/print_banco.png).
+
+---
+
 ## Decisões de design
 
 | Decisão                                | Alternativa descartada        | Motivo                                                        |
@@ -315,10 +361,12 @@ produção, o gerenciamento de chave precisa ser endereçado:
 
 Ver pasta [`/evidencias`](./evidencias):
 
-| Arquivo               | Conteúdo                                |
-|-----------------------|-----------------------------------------|
-| `output.txt`          | Output completo da execução             |
-| `print_execucao.png`  | Screenshot do terminal                  |
+| Arquivo               | Conteúdo                                            |
+|-----------------------|-----------------------------------------------------|
+| `output.txt`          | Output do CryptoService — 3 cenários                 |
+| `print_execucao.png`  | Screenshot do terminal — CryptoService              |
+| `output-banco.txt`    | Gravação no PostgreSQL + SELECT cru (coordenada cifrada) |
+| `print_banco.png`     | Screenshot — coordenada cifrada em repouso no banco |
 
 ---
 
@@ -326,11 +374,13 @@ Ver pasta [`/evidencias`](./evidencias):
 
 | Biblioteca                      | Origem            | Observação                          |
 |---------------------------------|-------------------|-------------------------------------|
-| `System.Security.Cryptography`  | built-in .NET 10  | Sem dependências externas           |
-| `System.Text`                   | built-in .NET 10  | Encoding UTF-8                      |
+| `System.Security.Cryptography`  | built-in .NET     | Núcleo do CryptoService — sem deps  |
+| `System.Text`                   | built-in .NET     | Encoding UTF-8                      |
 | `xUnit 2.9`                     | testes            | Apenas em `CryptoService.Tests`     |
+| `Npgsql 8.0`                    | demo de banco     | Driver PostgreSQL — apenas no `DbSeed` |
 
-**Zero dependências externas** — apenas a BCL do .NET.
+O **CryptoService** (núcleo do controle) tem **zero dependências externas** — só a
+BCL do .NET. O `Npgsql` é usado exclusivamente na demonstração de banco (`DbSeed`).
 
 ---
 

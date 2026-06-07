@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Orbital Trust · Módulo de Cibersegurança
+#  Banco de dados de persistência (PostgreSQL) para demonstrar a criptografia
+#  AES-256-GCM da coordenada do sensor "em repouso" (data at rest).
+#
+#  O campo `coordenada` da tabela `leituras_sensor` guarda SEMPRE o ciphertext
+#  Base64 produzido pelo CryptoService — nunca o texto claro. A demonstração
+#  (projeto DbSeed) grava o dado já cifrado e lê de volta, provando que quem
+#  abre o banco vê apenas Base64 ilegível.
+#
+#  Subir:    docker compose up -d
+#  Derrubar: docker compose down -v
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orbital-trust-db
+    environment:
+      POSTGRES_USER: orbital
+      POSTGRES_PASSWORD: orbital
+      POSTGRES_DB: orbital_trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orbital -d orbital_trust"]
+      interval: 3s
+      timeout: 3s
+      retries: 10

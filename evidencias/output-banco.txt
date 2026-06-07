@@ -1,0 +1,53 @@
+﻿================================================================
+ ORBITAL TRUST - Evidencia: coordenada cifrada no banco (Docker)
+ Ciberseguranca 1 - FIAP - Turma 3ESR
+ PostgreSQL 16 via docker-compose  +  app DbSeed (C# / Npgsql)
+================================================================
+
+PASSO 1 - Subir o banco            : docker compose up -d
+PASSO 2 - Gravar coordenada cifrada: dotnet run --project src/DbSeed
+PASSO 3 - Inspecionar o banco cru  : docker exec ... psql SELECT
+
+----------------------------------------------------------------
+ SAIDA DA APLICACAO (DbSeed)
+----------------------------------------------------------------
+╔══════════════════════════════════════════════════════════════╗
+║   ORBITAL TRUST — Coordenada cifrada no banco (data at rest)  ║
+║   Cibersegurança 1  ·  FIAP  ·  Turma 3ESR                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+[ 1 ]  Gravando leituras — coordenada cifrada ANTES de persistir
+────────────────────────────────────────────────────────────────
+  sensor-sp-01    texto claro  : -23.5505, -46.6333
+                  → gravado    : jvWK9pDBLZMF/2RL7sdGejwRGYL5D/Qn6I8Oac1cmg4OB+lq8OyB…
+
+  sensor-bsb-02   texto claro  : -15.7801, -47.9292
+                  → gravado    : J6AdLMJcI+70dTHbXaE666TrVc30QK11EtzICm5VVtJNgKHJGTdv…
+
+[ 2 ]  SELECT direto no banco — o que está fisicamente armazenado
+────────────────────────────────────────────────────────────────
+  (mesmo com acesso total ao banco, só se vê Base64 ilegível)
+
+  #1 sensor-sp-01
+     no banco  (cifrado) : jvWK9pDBLZMF/2RL7sdGejwRGYL5D/Qn6I8Oac1cmg4OB+lq8O…
+     decifrado pela app  : -23.5505, -46.6333
+
+  #2 sensor-bsb-02
+     no banco  (cifrado) : J6AdLMJcI+70dTHbXaE666TrVc30QK11EtzICm5VVtJNgKHJGT…
+     decifrado pela app  : -15.7801, -47.9292
+
+════════════════════════════════════════════════════════════════
+  Coordenada protegida em repouso com AES-256-GCM.
+  Mitiga Information Disclosure mesmo com o banco comprometido.
+════════════════════════════════════════════════════════════════
+
+----------------------------------------------------------------
+ PROVA DE OURO - SELECT direto no PostgreSQL (sem passar pela app)
+ Mesmo com acesso total ao banco, a coordenada e' apenas Base64.
+----------------------------------------------------------------
+ id |  sensor_nome  |             coordenada_no_banco              | bytes_base64 
+----+---------------+----------------------------------------------+--------------
+  1 | sensor-sp-01  | jvWK9pDBLZMF/2RL7sdGejwRGYL5D/Qn6I8Oac1cmg4O |           64
+  2 | sensor-bsb-02 | J6AdLMJcI+70dTHbXaE666TrVc30QK11EtzICm5VVtJN |           64
+(2 rows)
+
