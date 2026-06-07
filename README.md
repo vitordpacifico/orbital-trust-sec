@@ -19,7 +19,7 @@
 
 ## Destaques
 
-- **Criptografia AEAD** com AES-256-GCM no campo `Coordenada` da entidade `SensorTerrestre`
+- **Criptografia AEAD** com AES-256-GCM na **coordenada do sensor** (dado sensível de localização)
 - **Mitigação dupla** — Information Disclosure (confidencialidade) + Tampering (autenticação)
 - **Zero dependências externas** — apenas a BCL do .NET (`System.Security.Cryptography`)
 - **Três cenários** demonstram roundtrip, unicidade de ciphertext e detecção de adulteração
@@ -49,12 +49,14 @@
 
 ## Sobre o projeto
 
-O **Orbital Trust** é uma plataforma de monitoramento ambiental que combina
-**dados satelitais** com **sensores visuais terrestres** para gerar alertas
-confiáveis sobre queimadas, desmatamento, enchentes e seca.
+O **Orbital Trust** é um MVP que transforma **imagens orbitais abertas**
+(Sentinel-2, Landsat e tiles públicos) em alertas ambientais confiáveis sobre
+queimadas, solo exposto, água, vegetação e baixa visibilidade.
 
-O diferencial é o **Índice de Confiabilidade Orbital (ICO)** — cruzamento entre
-a análise do modelo de Machine Learning e a detecção visual em tempo real.
+A arquitetura é desacoplada em três camadas: **IoT/CV** (Python + OpenCV) carrega
+frames e gera um payload JSON padronizado; **API/ML** (FastAPI) refina o risco
+ambiental e emite recomendações; e o **App Mobile** (React Native/Expo) exibe os
+alertas. A confiança da análise sustenta o índice de confiabilidade do alerta.
 
 ---
 
@@ -71,10 +73,10 @@ Análise via modelo **STRIDE**:
 
 | Ameaça STRIDE              | Vetor                                              | Mitigação aplicada                  |
 |----------------------------|----------------------------------------------------|-------------------------------------|
-| **Information Disclosure** | Vazamento do banco → coordenadas em texto claro    | AES-256-GCM no campo `Coordenada`   |
-| **Tampering**              | Adulteração de bytes do registro no banco          | Autenticação AEAD (tag GCM)         |
+| **Information Disclosure** | Coordenada do sensor exposta em texto claro (em repouso ou num dump) | AES-256-GCM na coordenada |
+| **Tampering**              | Adulteração de bytes do dado criptografado         | Autenticação AEAD (tag GCM)         |
 
-> Sem o controle: um dump do banco exporia a **localização exata** de cada
+> Sem o controle: o vazamento do dado exporia a **localização exata** de cada
 > sensor — informação operacionalmente crítica e potencialmente sensível para
 > segurança física dos equipamentos.
 
@@ -82,8 +84,9 @@ Análise via modelo **STRIDE**:
 
 ## Implementação prática — AES-256-GCM
 
-Criptografia **AES-256 em modo GCM** aplicada ao campo `Coordenada` da entidade
-`SensorTerrestre` **antes** da persistência no banco.
+Criptografia **AES-256 em modo GCM** aplicada à **coordenada do sensor** — o dado
+mais sensível do payload, pois revela a localização exata da infraestrutura
+monitorada — **antes** de ser persistida ou transmitida.
 
 ### Por que GCM e não CBC?
 
@@ -117,8 +120,8 @@ a classe de ataques de padding oracle.
 
 ```mermaid
 flowchart LR
-    A[Sensor Terrestre] -->|Coordenada<br/>-23.5505, -46.6333| B[CryptoService.Encrypt]
-    B -->|nonce 12B + tag 16B + cipher| C[(Banco)]
+    A[Sensor / Payload] -->|Coordenada<br/>-23.5505, -46.6333| B[CryptoService.Encrypt]
+    B -->|nonce 12B + tag 16B + cipher| C[(Dado em repouso<br/>Base64)]
     C -->|Base64| D[CryptoService.Decrypt]
     D -->|tag válida| E[API / Dashboard]
     D -->|tag inválida| F[CryptographicException]
@@ -138,7 +141,7 @@ flowchart LR
                       ↓
                 Base64 encode
                       ↓
-      persistido no campo `Coordenada`
+       guardado/transmitido como `Coordenada`
 ```
 
 O nonce vai junto do ciphertext porque é necessário para descriptografar —
@@ -151,28 +154,30 @@ O nonce vai junto do ciphertext porque é necessário para descriptografar —
 ```csharp
 using OrbitalTrust.Security;
 
-// Persistência: criptografa antes de salvar
+// Antes de guardar/transmitir: criptografa a coordenada
 var coordenada = "-23.5505, -46.6333";
-sensor.Coordenada = CryptoService.Encrypt(coordenada);
-db.SensoresTerrestres.Add(sensor);
-await db.SaveChangesAsync();
+var protegida  = CryptoService.Encrypt(coordenada);
+// → Base64 ilegível: "nonce|tag|ciphertext"
 
-// Leitura: descriptografa após buscar
-var registro = await db.SensoresTerrestres.FindAsync(id);
-var coord = CryptoService.Decrypt(registro.Coordenada);
+// Ao consumir: descriptografa de volta
+var coord = CryptoService.Decrypt(protegida);
 // → "-23.5505, -46.6333"
 
-// Detecção de adulteração
+// Detecção de adulteração (autenticação GCM)
 try
 {
     CryptoService.Decrypt(dadoAdulterado);
 }
 catch (CryptographicException)
 {
-    // tag inválida — registro foi alterado no banco
-    logger.LogCritical("Tampering detectado no sensor {Id}", id);
+    // tag inválida — o dado foi alterado
+    Console.Error.WriteLine("Tampering detectado na coordenada.");
 }
 ```
+
+> O contrato é simples (`string → string` em Base64), então qualquer camada da
+> solução — inclusive a API em Python, via serviço ou porta dedicada — pode
+> consumir o controle sem acoplamento de linguagem.
 
 ---
 
@@ -180,11 +185,11 @@ catch (CryptographicException)
 
 | #   | Controle                          | Tipo            | Aplica em                                  |
 |:---:|-----------------------------------|-----------------|--------------------------------------------|
-|  1  | TLS/HTTPS obrigatório             | Preventivo      | API de Alertas                             |
+|  1  | TLS/HTTPS obrigatório             | Preventivo      | API de Análise (FastAPI)                    |
 |  2  | Autenticação + Roles IAM          | Preventivo      | API — sensor_node / analyst / admin        |
-|  3  | **AES-256-GCM em coordenadas**    | **Preventivo**  | **Banco — campo Coordenada** ← este repo   |
-|  4  | Monitoramento de logs             | Detectivo       | API + Banco                                |
-|  5  | mTLS para IoT                     | Preventivo      | Nó Sensor / Câmera                         |
+|  3  | **AES-256-GCM na coordenada**     | **Preventivo**  | **Coordenada do sensor** ← este repo       |
+|  4  | Monitoramento de logs             | Detectivo       | API + persistência                         |
+|  5  | mTLS para IoT                     | Preventivo      | Nó IoT / CV                                 |
 
 ---
 
