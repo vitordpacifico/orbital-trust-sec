@@ -1,4 +1,4 @@
-╔══════════════════════════════════════════════════════╗
+﻿╔══════════════════════════════════════════════════════╗
 ║     ORBITAL TRUST — CryptoService  |  GS 2026        ║
 ║     Cibersegurança 1  ·  FIAP  ·  Turma 3ESR         ║
 ╚══════════════════════════════════════════════════════╝
@@ -7,7 +7,7 @@
 ──────────────────────────────────────────────────────
   Original    : -23.5505, -46.6333
   Criptografado (Base64):
-  vCGhi9Vx4BXOaudR5yS+luvFAuB3YOqvt8rrTqjfeHUwAfOCUrxgjQAfo07l9Q==
+  P3JNCKYltLTjpH6QJU3WnoK9CBtG9VG/nDxdn1Y+xB7WVztmfLRJilqYwNpW7Q==
   Descriptografado: -23.5505, -46.6333
   Integridade OK  : True
 
@@ -15,7 +15,7 @@
 ──────────────────────────────────────────────────────
   Original    : -15.7801, -47.9292
   Criptografado (Base64):
-  /374eKR444fzHDk3HCmARQho+Lamnu4CR24LQv6nD3u8YFBzfFxpDeclqwV3fA==
+  pO3SMiWliysbPT+RZ0ennC1cgwZHxbLHMbRq/7gwL5eTzp49QMxZ4BjqDQXQlQ==
   Descriptografado: -15.7801, -47.9292
   Integridade OK  : True
 

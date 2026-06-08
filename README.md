@@ -5,7 +5,7 @@
 ### Módulo de Cibersegurança · Orbital Trust
 **Global Solution · 1º Semestre 2026**
 
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-AEAD-success?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
 [![FIAP](https://img.shields.io/badge/FIAP-3ESR-ED1C24?style=for-the-badge)](https://www.fiap.com.br/)
 [![Disciplina](https://img.shields.io/badge/Cibersegurança_1-Oerton_Fernandes-0A66C2?style=for-the-badge)]()
@@ -231,7 +231,7 @@ orbital-trust-sec/
 
 ## Como rodar
 
-> **Requisito:** .NET 10 SDK
+> **Requisito:** .NET 8 SDK
 
 ```bash
 cd src/CryptoService
